@@ -9,7 +9,7 @@ public enum CicluStudiuEnum {
 
     public static boolean contains(String value){
         for(CicluStudiuEnum cicluStudiu : CicluStudiuEnum.values()){
-            if(cicluStudiu.toString().equals(value.toUpperCase(Locale.ROOT))){
+            if(cicluStudiu.toString().toUpperCase(Locale.ROOT).equals(value.toUpperCase(Locale.ROOT))){
                 return true;
             }
         }

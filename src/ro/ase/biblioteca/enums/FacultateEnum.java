@@ -18,7 +18,7 @@ public enum FacultateEnum {
 
     public static boolean contains(String value){
         for(FacultateEnum facultate : FacultateEnum.values()){
-            if(facultate.toString().equals(value.toUpperCase(Locale.ROOT))){
+            if(facultate.toString().toUpperCase(Locale.ROOT).equals(value.toUpperCase(Locale.ROOT))){
                 return true;
             }
         }

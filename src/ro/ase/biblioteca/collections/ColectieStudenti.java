@@ -6,6 +6,7 @@ import ro.ase.biblioteca.enums.CicluStudiuEnum;
 import ro.ase.biblioteca.enums.FacultateEnum;
 import ro.ase.biblioteca.generics.Colectie;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Locale;
@@ -63,12 +64,10 @@ public class ColectieStudenti extends Colectie<Integer, Student> {
         String nume = scanner.nextLine();
 
         System.out.println("Facultate:");
-        scanner = new Scanner(System.in);
-        String facultate = scanner.nextLine();
+        FacultateEnum facultate = getFacultate();
 
         System.out.println("Ciclu studiu:");
-        scanner = new Scanner(System.in);
-        String cicluStudiu = scanner.nextLine();
+        CicluStudiuEnum cicluStudiu = getCicluStudiu();
 
         System.out.println("An studiu:");
         scanner = new Scanner(System.in);
@@ -77,38 +76,86 @@ public class ColectieStudenti extends Colectie<Integer, Student> {
         System.out.println("Permis biblioteca:");
 
         System.out.println("\tdata eliberare (yyyy-MM-dd):");
-        scanner = new Scanner(System.in);
-        LocalDate dataEliberarePermis = LocalDate.parse(scanner.nextLine());
+        LocalDate dataEliberarePermis = setDataEliberareIfValid();
 
         System.out.println("\tdata expirare (yyyy-MM-dd):");
-        scanner = new Scanner(System.in);
-        LocalDate dataExpirarePermis = LocalDate.parse(scanner.nextLine());
+        LocalDate dataExpirarePermis = setDataExpirareIfValid(dataEliberarePermis);
 
-        boolean valid = true;
+        Student deAdaugat = new Student(
+                nume,
+                facultate,
+                cicluStudiu,
+                an,
+                new PermisBiblioteca(
+                        dataEliberarePermis,
+                        dataExpirarePermis
+                )
+        );
+        super.add(deAdaugat.getPermisBiblioteca().getId(), deAdaugat);
+    }
 
-        if (!FacultateEnum.contains(facultate)) {
-            valid = false;
-            System.out.println("Facultatea introdusa nu este corecta.");
-        } else if (!CicluStudiuEnum.contains(facultate)) {
-            valid = false;
-            System.out.println("Ciclul de studiu introdus nu este corect.");
+    private boolean parsareData(String data) {
+        try {
+            LocalDate.parse(data);
+            return true;
+        } catch (DateTimeException e) {
+            System.out.println("Data invalida. Incercati din nou.");
+            return false;
         }
-        if (valid) {
-            Student deAdaugat = new Student(
-                    nume,
-                    FacultateEnum.valueOf(facultate),
-                    CicluStudiuEnum.valueOf(cicluStudiu),
-                    an,
-                    new PermisBiblioteca(
-                            dataEliberarePermis,
-                            dataExpirarePermis
-                    )
-            );
-            super.add(deAdaugat.getPermisBiblioteca().getId(), deAdaugat);
+    }
+
+    private LocalDate getDataPermis() {
+        Scanner scanner = new Scanner(System.in);
+        String data = scanner.nextLine();
+        if (parsareData(data)) {
+            return LocalDate.parse(data);
         } else {
-            System.out.println("Incercati din nou.");
-            adaugaStudent();
+            return getDataPermis();
         }
+    }
+
+    private FacultateEnum getFacultate() {
+        Scanner scanner = new Scanner(System.in);
+        String facultate = scanner.nextLine();
+        if (FacultateEnum.contains(facultate)) {
+            return FacultateEnum.valueOf(facultate.toUpperCase(Locale.ROOT));
+        } else {
+            System.out.println("Facultatea introdusa nu este corecta, incercati din nou.");
+            return getFacultate();
+        }
+    }
+
+    private CicluStudiuEnum getCicluStudiu() {
+        Scanner scanner = new Scanner(System.in);
+        String cicluStudiu = scanner.nextLine();
+        if (CicluStudiuEnum.contains(cicluStudiu)) {
+            return CicluStudiuEnum.valueOf(cicluStudiu.toUpperCase(Locale.ROOT));
+        } else {
+            System.out.println("Ciclul de studiu introdus nu este corect, incercati din nou.");
+            return getCicluStudiu();
+        }
+    }
+
+    private LocalDate setDataEliberareIfValid() {
+        LocalDate dataEliberare = getDataPermis();
+
+        if(dataEliberare.compareTo(LocalDate.now())<0){
+            System.out.println("Data de eliberare nu poate fi o data din trecut.");
+            return setDataEliberareIfValid();
+        }
+
+        return dataEliberare;
+    }
+
+    private LocalDate setDataExpirareIfValid(LocalDate dataEliberare) {
+        LocalDate dataExpirare = getDataPermis();
+
+        if(dataExpirare.compareTo(dataEliberare)<0){
+            System.out.println("Data de expirare trebuie sa fie mai mare decat data de eliberare.");
+            return setDataExpirareIfValid(dataEliberare);
+        }
+
+        return dataExpirare;
     }
 
     @Override
